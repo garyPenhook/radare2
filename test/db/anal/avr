@@ -183,6 +183,34 @@ rjmp 0xfffff106
 EOF
 RUN
 
+NAME=avr rjmp - backward wrap at 0 - ATtiny3217 (32KB flash)
+FILE=malloc://8192
+ARGS=-a avr
+CMDS=<<EOF
+e asm.cpu=ATtiny3217
+wx 00c8
+aoe 1
+ao 1~^jump[1]
+EOF
+EXPECT=<<EOF
+0x0 0x7002,pc,:=
+0x00007002
+EOF
+RUN
+
+NAME=avr rjmp - ATtiny3216 inherits ATtiny3217
+FILE=malloc://8192
+ARGS=-a avr
+CMDS=<<EOF
+e asm.cpu=ATtiny3216
+wx 00c8
+ao 1~^jump[1]
+EOF
+EXPECT=<<EOF
+0x00007002
+EOF
+RUN
+
 NAME=avr rjmp - relative jump forward
 FILE=malloc://8192
 CMDS=<<EOF

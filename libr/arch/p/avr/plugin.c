@@ -109,6 +109,18 @@ CPU_CONST cpu_memsize_xmega128a4u[] = {
 	{ NULL, 0, 0, 0 },
 };
 
+// ATtiny3216/3217 (tinyAVR 1-series, AVRxt core) - DS40002205A
+//   Flash 32KB (p.17/18), SRAM 2KB @ 0x3800 (p.17), EEPROM 256B (p.17),
+//   I/O space 0x0000-0x0fff (p.18). Self-programming is done via NVMCTRL
+//   (base 0x1000, p.43); there is no SPMCSR register on this family.
+CPU_CONST cpu_memsize_attiny3216_3217[] = {
+	{ "eeprom_size", CPU_CONST_PARAM, 0x100, sizeof (ut32) },
+	{ "io_size", CPU_CONST_PARAM, 0x1000, sizeof (ut32) },
+	{ "sram_start", CPU_CONST_PARAM, 0x3800, sizeof (ut32) },
+	{ "sram_size", CPU_CONST_PARAM, 0x800, sizeof (ut32) },
+	{ NULL, 0, 0, 0 },
+};
+
 CPU_CONST cpu_pagesize_5_bits[] = {
 	{ "page_size", CPU_CONST_PARAM, 5, sizeof (ut8) },
 	{ NULL, 0, 0, 0 },
@@ -164,6 +176,27 @@ CPU_MODEL cpu_models[] = {
 			cpu_pagesize_5_bits,
 			NULL
 		}
+	},
+	{
+		// tinyAVR 1-series (AVRxt). Hardware PC is 14-bit *word*
+		// addressing (DS40002205A p.18); CPU_PC_MASK is applied to
+		// byte addresses here, so use 15 bits to cover the full
+		// 32KB flash (same convention as ATmega8: 12-bit PC -> 13).
+		// spl/sph/sreg remain at 0x3d/0x3e/0x3f (DS p.56/57).
+		.model = "ATtiny3217",
+		.pc = 15,
+		.consts = {
+			cpu_reg_common,
+			cpu_memsize_attiny3216_3217,
+			cpu_pagesize_7_bits, // 128B flash page (DS p.17)
+			NULL
+		}
+	},
+	{
+		// same die as ATtiny3217 with identical memory map (DS40002205A)
+		.model = "ATtiny3216",
+		.pc = 15,
+		.inherit = "ATtiny3217"
 	},
 	// last model is the default AVR
 	{
@@ -2396,7 +2429,9 @@ const RArchPlugin r_arch_plugin_avr = {
 		"ATmega32u4,"
 		"ATmega48,"
 		"ATmega640,"
-		"ATmega88"
+		"ATmega88,"
+		"ATtiny3216,"
+		"ATtiny3217"
 };
 
 #ifndef R2_PLUGIN_INCORE
