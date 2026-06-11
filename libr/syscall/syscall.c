@@ -142,6 +142,15 @@ R_API bool r_syscall_setup(RSyscall *s, const char *arch, int bits, const char *
 			s->srdb = openDatabase (NULL, dbName);
 			free (dbName);
 		}
+		if (sdb_isempty (s->srdb)) {
+			// fall back to the bits-agnostic database for this cpu
+			dbName = r_str_newf (R_JOIN_2_PATHS ("sysregs", "%s-%s"), arch, cpu);
+			if (dbName) {
+				sdb_free (s->srdb);
+				s->srdb = openDatabase (NULL, dbName);
+				free (dbName);
+			}
+		}
 	}
 	if (s->fd) {
 		fclose (s->fd);
@@ -296,7 +305,7 @@ R_API const char *r_syscall_get_io(RSyscall *s, int ioport) {
 }
 
 R_API const char* r_syscall_sysreg(RSyscall *s, const char *type, ut64 num) {
-	R_RETURN_VAL_IF_FAIL (s && s->db, NULL);
+	R_RETURN_VAL_IF_FAIL (s && s->srdb, NULL);
 	r_strf_var (key, 64, "%s,%"PFMT64d, type, num);
-	return sdb_const_get (s->db, key, 0);
+	return sdb_const_get (s->srdb, key, 0);
 }

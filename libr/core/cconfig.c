@@ -824,6 +824,13 @@ static bool cb_asmcpu(void *user, void *data) {
 		core->anal->config->codealign = v;
 	}
 	r_config_set_i (core->config, "arch.codealign", (v != -1)? v: 0);
+	RConfigNode *asmarch = r_config_node_get (core->config, "asm.arch");
+	if (core->anal && asmarch) {
+		// reload the cpu-specific sysregs database
+		const char *asmos = r_config_get (core->config, "asm.os");
+		r_syscall_setup (core->anal->syscall, asmarch->value,
+			core->anal->config->bits, node->value, asmos);
+	}
 	return true;
 }
 
